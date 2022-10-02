@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 配置文件每隔1分钟，就检查更新 -->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <!-- 定义参数常量，便于后面直接用${name}来获取value值 -->
+    <property name="log.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-5level] %logger{50} - %msg%n"/>
+    <!-- 获取spring上下文属性 -->
+    <springProperty scope="local" name="springAppName" source="spring.application.name"
+                    defaultValue="demo-server"/>
+
+    <!-- ch.qos.logback.core.ConsoleAppender 控制台输出 -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 过去使用layout，现在都推荐使用encoder
+             作用一：将日志信息转换（格式化）为字符串
+             作用二：然后写入到文件中-->
+        <encoder>
+            <pattern>${log.pattern}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!--输出到logstash的appender-->
+    <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <!--可以访问的logstash日志收集端口-->
+        <destination>${Logstash_Uri}</destination>
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+            <!--自定义字段，区分应用名称-->
+            <timestamp>
+                <timeZone>UTC</timeZone>
+            </timestamp>
+            <pattern>
+                <pattern>
+                    {
+                    "severity": "%level",
+                    "service": "${springAppName:-}",
+                    "port": "${serverPort:-}",
+                    "trace": "%X{X-B3-TraceId:-}",
+                    "span": "%X{X-B3-SpanId:-}",
+                    "exportable": "%X{X-Span-Export:-}",
+                    "pid": "${PID:-}",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "rest": "%msg"
+                    }
+                </pattern>
+            </pattern>
+        </encoder>
+
+    </appender>
+
+    <!-- 也是一种<logger>,是所有<logger>的父级 -->
+    <!-- 不设置additivity属性，或者设置additivity = true的<logger>,会继承root的子标签<appender-ref ref="console" />的设置，
+        将它自己设置的level属性级别及以上的日志打印到控制台 -->
+    <root level="info">
+        <!-- 表示按照console的设置去输出日志到控制台 -->
+        <appender-ref ref="console"/>
+        <appender-ref ref="logstash"/>
+    </root>
+</configuration>
