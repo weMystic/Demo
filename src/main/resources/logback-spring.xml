@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 配置文件每隔1分钟，就检查更新 -->
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
-    <!-- 定义参数常量，便于后面直接用${name}来获取value值 -->
-    <property name="log.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-5level] %logger{50} - %msg%n"/>
+    <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+    <property name="log.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n" />
+    <property name="log.pattern.short" value="%date{yyyyMMdd HH:mm:ss.SSS}-%msg%n" />
+    <!-- 彩色日志格式 -->
+    <property name="log.pattern.color" value="%green(%date{yyyy-MM-dd HH:mm:ss}) [%thread] |%highlight(%-5level) |%green(%logger:%line) |%black(%msg%n)" />
+
+    <property name="log.charset" value="UTF-8" />
     <!-- 获取spring上下文属性 -->
     <springProperty scope="local" name="springAppName" source="spring.application.name"
                     defaultValue="demo-server"/>
 
-    <!-- ch.qos.logback.core.ConsoleAppender 控制台输出 -->
+    <!-- Console 输出设置 -->
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- 过去使用layout，现在都推荐使用encoder
-             作用一：将日志信息转换（格式化）为字符串
-             作用二：然后写入到文件中-->
-        <encoder>
-            <pattern>${log.pattern}</pattern>
-            <charset>UTF-8</charset>
+        <encoder charset="${log.charset}">
+            <pattern>${log.pattern.color}</pattern>
         </encoder>
     </appender>
 
     <!--输出到logstash的appender-->
     <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
         <!--可以访问的logstash日志收集端口-->
-        <destination>${Logstash_Uri}</destination>
+        <destination>192.168.0.108:4560</destination>
         <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
             <!--自定义字段，区分应用名称-->
             <timestamp>

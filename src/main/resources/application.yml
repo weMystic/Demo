@@ -3,10 +3,23 @@ server:
 spring:
   application:
     name: demo-service
+  rabbitmq:
+    host: 192.168.0.108
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      type: simple
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+    virtual-host: /
+
+queues:
+  testQueueName: testQueueName
+  testQueueExchangeName: testQueueExchangeName
+  testExchangeEnabled: true
 
 # 指定日志配置文件
 logging:
-  config: classpath:logback-spring.xml
-
-custom:
-  logstash_uri: 192.168.0.108:4560
+  config: D:\JavaProject\Demo\src\main\resources\logback-spring.xml
